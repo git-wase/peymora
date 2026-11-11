@@ -69,6 +69,14 @@ export default function PrivacyPage() {
           </p>
         </section>
         <section>
+          <h2 className="font-serif text-3xl tracking-tight text-ink">Bot check</h2>
+          <p className="mt-4">
+            The signup form uses Cloudflare Turnstile before an address is saved. It asks the
+            browser to complete a check so automated submissions are rejected. That check is not
+            used to build an advertising profile, and it is not stored with the subscriber record.
+          </p>
+        </section>
+        <section>
           <h2 className="font-serif text-3xl tracking-tight text-ink">Measurement</h2>
           <p className="mt-4">
             When the site owner turns them on, the site may load Plausible and Vercel Web Analytics.

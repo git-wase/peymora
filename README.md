@@ -56,6 +56,18 @@ SITE_URL=https://yourdomain.com
 
 `RESEND_FROM` must use a verified domain. `SITE_URL` is the public origin with no trailing slash. Confirmation and unsubscribe links are built from it.
 
+### 3. Cloudflare Turnstile
+
+1. Create a Turnstile widget for the public domain.
+2. Set the site key and secret on the server:
+
+```bash
+NEXT_PUBLIC_TURNSTILE_SITE_KEY=your_site_key
+TURNSTILE_SECRET_KEY=your_secret_key
+```
+
+The form shows the check above the submit button and sends the token with the signup. The server verifies it before anything is saved. Production refuses signups when `TURNSTILE_SECRET_KEY` is missing. Local development with `USE_LOCAL_STORE=true` skips the check only when that secret is unset.
+
 ### What a signup does
 
 1. The visitor submits an email and checks the consent box. Optional questions are not required.

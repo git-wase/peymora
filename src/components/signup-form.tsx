@@ -9,6 +9,7 @@ import {
 import { captureAttribution } from "@/lib/attribution";
 import { signupCopy, type SignupStatus } from "@/lib/signup-copy";
 import { track } from "@/lib/track";
+import { TurnstileField } from "@/components/turnstile";
 import Link from "next/link";
 import { useEffect, useState, type FormEvent } from "react";
 
@@ -29,6 +30,7 @@ export function SignupForm({ idPrefix, variant = "light", questions = true }: Pr
   const [dogSize, setDogSize] = useState("");
   const [digFrequency, setDigFrequency] = useState("");
   const [methods, setMethods] = useState<string[]>([]);
+  const [turnstileToken, setTurnstileToken] = useState("");
 
   useEffect(() => {
     const timer = window.setTimeout(() => setStartedAt(String(Date.now())), 0);
@@ -86,6 +88,10 @@ export function SignupForm({ idPrefix, variant = "light", questions = true }: Pr
       setStatus("consent_required");
       return;
     }
+    if (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && !turnstileToken) {
+      setStatus("captcha_required");
+      return;
+    }
 
     const attribution = captureAttribution();
     setPending(true);
@@ -109,6 +115,7 @@ export function SignupForm({ idPrefix, variant = "light", questions = true }: Pr
           utmContent: attribution.utmContent || null,
           utmTerm: attribution.utmTerm || null,
           referrer: attribution.referrer || null,
+          turnstileToken: turnstileToken || null,
         }),
       });
       const result = (await response.json()) as { status?: SignupStatus; devConfirmUrl?: string };
@@ -128,6 +135,7 @@ export function SignupForm({ idPrefix, variant = "light", questions = true }: Pr
         setDogSize("");
         setDigFrequency("");
         setMethods([]);
+        setTurnstileToken("");
       }
     } catch {
       setStatus("error");
@@ -252,6 +260,8 @@ export function SignupForm({ idPrefix, variant = "light", questions = true }: Pr
         </div>
       </fieldset>
       ) : null}
+
+      <TurnstileField variant={variant} onToken={setTurnstileToken} />
 
       <button type="submit" className={`${button} mt-7`} disabled={pending}>
         {pending ? "Sending…" : signup.button}

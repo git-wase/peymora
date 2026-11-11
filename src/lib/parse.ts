@@ -94,31 +94,44 @@ export function submissionFromRecord(record: Record<string, unknown>): Submissio
   };
 }
 
-export async function submissionFromRequest(request: Request): Promise<Submission> {
+function turnstileTokenFrom(value: unknown) {
+  return cleanShort(value, 2048);
+}
+
+export async function submissionFromRequest(
+  request: Request,
+): Promise<{ submission: Submission; turnstileToken: string | null }> {
   const type = request.headers.get("content-type") || "";
   if (type.includes("application/json")) {
     const body = (await request.json()) as unknown;
     if (!body || typeof body !== "object" || Array.isArray(body)) {
-      return submissionFromRecord({});
+      return { submission: submissionFromRecord({}), turnstileToken: null };
     }
-    return submissionFromRecord(body as Record<string, unknown>);
+    const record = body as Record<string, unknown>;
+    return {
+      submission: submissionFromRecord(record),
+      turnstileToken: turnstileTokenFrom(record.turnstileToken ?? record.turnstile_token),
+    };
   }
 
   const form = await request.formData();
-  return submissionFromRecord({
-    email: form.get("email"),
-    consent: form.get("consent"),
-    company: form.get("company"),
-    started_at: form.get("started_at"),
-    dog_size: form.get("dog_size"),
-    dig_frequency: form.get("dig_frequency"),
-    correction_methods: form.getAll("correction_methods"),
-    message: form.get("message"),
-    utm_source: form.get("utm_source"),
-    utm_medium: form.get("utm_medium"),
-    utm_campaign: form.get("utm_campaign"),
-    utm_content: form.get("utm_content"),
-    utm_term: form.get("utm_term"),
-    referrer: form.get("referrer"),
-  });
+  return {
+    submission: submissionFromRecord({
+      email: form.get("email"),
+      consent: form.get("consent"),
+      company: form.get("company"),
+      started_at: form.get("started_at"),
+      dog_size: form.get("dog_size"),
+      dig_frequency: form.get("dig_frequency"),
+      correction_methods: form.getAll("correction_methods"),
+      message: form.get("message"),
+      utm_source: form.get("utm_source"),
+      utm_medium: form.get("utm_medium"),
+      utm_campaign: form.get("utm_campaign"),
+      utm_content: form.get("utm_content"),
+      utm_term: form.get("utm_term"),
+      referrer: form.get("referrer"),
+    }),
+    turnstileToken: turnstileTokenFrom(form.get("cf-turnstile-response")),
+  };
 }

@@ -1,4 +1,5 @@
 import { getStoreMode, isEmailConfigured, publicOrigin } from "@/lib/config";
+import { verifyTurnstile } from "@/lib/turnstile";
 import { sendConfirmEmail } from "@/lib/email";
 import { isValidEmail } from "@/lib/parse";
 import { rateLimit } from "@/lib/rate-limit";
@@ -72,7 +73,15 @@ async function deliver(subscriber: Subscriber, request: Request): Promise<Subscr
   return { status: "check_email" };
 }
 
-export async function subscribe(incoming: Submission, request: Request): Promise<SubscribeResult> {
+export async function subscribe(
+  incoming: Submission,
+  request: Request,
+  turnstileToken: string | null,
+): Promise<SubscribeResult> {
+  const captcha = await verifyTurnstile(turnstileToken, request);
+  if (captcha === "unconfigured") return { status: "captcha_unconfigured" };
+  if (captcha === "failed") return { status: "captcha_required" };
+
   const elapsed = incoming.startedAt === null ? null : Date.now() - incoming.startedAt;
   const tooFast = elapsed !== null && elapsed >= 0 && elapsed < 200;
   if (incoming.company.trim() || tooFast) {

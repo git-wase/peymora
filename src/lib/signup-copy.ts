@@ -9,6 +9,8 @@ export const signupStatuses = [
   "consent_required",
   "rate_limited",
   "stale_form",
+  "captcha_required",
+  "captcha_unconfigured",
   "error",
 ] as const;
 
@@ -68,6 +70,16 @@ export const signupCopy: Record<
     title: "This page has been open for a while.",
     body: "Refresh it, then submit again. Nothing was saved.",
   },
+  captcha_required: {
+    tone: "error",
+    title: "Complete the check above the button.",
+    body: "That confirms a person is sending the form. Nothing was saved.",
+  },
+  captcha_unconfigured: {
+    tone: "error",
+    title: "The bot check is not set up.",
+    body: "Signups are paused until that check is configured. Nothing was saved.",
+  },
   error: {
     tone: "error",
     title: "Something went wrong.",
@@ -88,7 +100,10 @@ export function statusCode(status: SignupStatus) {
     case "invalid_email":
     case "consent_required":
     case "stale_form":
+    case "captcha_required":
       return 400;
+    case "captcha_unconfigured":
+      return 503;
     case "rate_limited":
       return 429;
     case "email_failed":

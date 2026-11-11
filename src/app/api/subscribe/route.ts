@@ -32,8 +32,8 @@ export function GET() {
 
 export async function POST(request: Request) {
   try {
-    const submission = await submissionFromRequest(request);
-    const result = await subscribe(submission, request);
+    const { submission, turnstileToken } = await submissionFromRequest(request);
+    const result = await subscribe(submission, request, turnstileToken);
     return respond(request, result);
   } catch (error) {
     console.error("[vela] subscribe failed", error instanceof Error ? error.message : "unknown");
